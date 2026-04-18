@@ -6,8 +6,6 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { writeFileSync, mkdirSync, existsSync } from "fs";
-import { join } from "path";
 import { getFavorites } from "@/lib/mock/data";
 import {
   generateSkillWithAI,
@@ -94,19 +92,7 @@ export async function POST(req: NextRequest) {
     // 生成 Markdown 内容
     const skillContent = generateSkillMarkdown(skill, selectedVideos);
 
-    // 写入文件系统
-    const skillDir = join(process.cwd(), ".claude", "skills", skill.name);
-    const skillFilePath = join(skillDir, "SKILL.md");
-
-    // 确保目录存在
-    if (!existsSync(skillDir)) {
-      mkdirSync(skillDir, { recursive: true });
-    }
-
-    // 写入文件
-    writeFileSync(skillFilePath, skillContent, "utf-8");
-
-    // 返回成功响应
+    // 返回生成内容（serverless 环境不写入文件系统）
     return NextResponse.json({
       success: true,
       skillPath: `.claude/skills/${skill.name}/SKILL.md`,

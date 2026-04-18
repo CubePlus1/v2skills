@@ -1,0 +1,13 @@
+[build]
+  # Next.js 项目在 src/ 子目录
+  base = "src"
+  command = "npm run build"
+  publish = ".next"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+# 环境变量占位（实际值在 Netlify Dashboard 设置）
+# AI_API_KEY = ""
+# AI_BASE_URL = ""
+# AI_MODEL = ""
