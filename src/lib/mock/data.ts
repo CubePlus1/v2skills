@@ -1,5 +1,15 @@
-import path from "path";
-import { readFileSync, existsSync } from "fs";
+// ─────────────────────────────────────────────
+// 静态 JSON 导入（兼容 Cloudflare Workers，无需 fs）
+// ─────────────────────────────────────────────
+
+import categoriesData from "../../public/mock/categories.json";
+import techFavorites from "../../public/mock/tech_favorites.json";
+import foodFavorites from "../../public/mock/food_favorites.json";
+import knowledgeFavorites from "../../public/mock/knowledge_favorites.json";
+import jieshuo from "../../public/mock/jieshuo.json";
+import lvyou from "../../public/mock/lvyou.json";
+import youxi from "../../public/mock/youxi.json";
+import knowledge from "../../public/mock/knowledge.json";
 
 // ─────────────────────────────────────────────
 // 分类 ID — 与 categories.json 中的 id 对齐
@@ -47,47 +57,22 @@ export interface CategoryMeta {
 }
 
 // ─────────────────────────────────────────────
-// JSON 加载器
+// 中文分类名 → CategoryId
 // ─────────────────────────────────────────────
 
-function loadJson<T>(filename: string): T {
-  const filePath = path.join(process.cwd(), "public", "mock", filename);
-  return JSON.parse(readFileSync(filePath, "utf-8")) as T;
-}
-
-let _favorites: MockVideo[] | null = null;
-let _categories: CategoryMeta[] | null = null;
-
-/**
- * 加载所有收藏视频。
- * 优先读取 favorites.json；不存在时自动合并各分类文件。
- */
-export function getFavorites(): MockVideo[] {
-  if (!_favorites) {
-    const favPath = path.join(
-      process.cwd(),
-      "public",
-      "mock",
-      "favorites.json"
-    );
-
-    if (existsSync(favPath)) {
-      _favorites = loadJson<MockVideo[]>("favorites.json");
-    } else {
-      _favorites = loadFavoritesFromParts();
-    }
-  }
-  return _favorites;
-}
-
-export function getCategories(): CategoryMeta[] {
-  if (!_categories)
-    _categories = loadJson<CategoryMeta[]>("categories.json");
-  return _categories;
-}
+const CATEGORY_NAME_MAP: Record<string, CategoryId> = {
+  科技: "tech",
+  美食: "food",
+  解说: "jieshuo",
+  旅行: "trip",
+  人文: "renwen",
+  游戏: "game",
+  知识: "knowledge",
+  商业财经: "knowledge",
+};
 
 // ─────────────────────────────────────────────
-// 自动合并各分类 JSON 文件
+// 数据加载（静态导入，构建时打包）
 // ─────────────────────────────────────────────
 
 interface RawFavorite {
@@ -100,62 +85,49 @@ interface RawFavorite {
   transcript?: string;
 }
 
-// 中文分类名 → CategoryId
-const CATEGORY_NAME_MAP: Record<string, CategoryId> = {
-  科技: "tech",
-  美食: "food",
-  解说: "jieshuo",
-  旅行: "trip",
-  人文: "renwen",
-  游戏: "game",
-  知识: "knowledge",
-  商业财经: "knowledge",
-};
+/**
+ * 将原始 JSON 数据映射为 MockVideo[]
+ */
+function mapRawToVideos(
+  raw: RawFavorite | RawFavorite[],
+  fallbackCategory: CategoryId
+): MockVideo[] {
+  const items = Array.isArray(raw) ? raw : [raw];
+  return items.map((item) => ({
+    id: item.id,
+    title: item.title,
+    description: item.description,
+    tags: item.tags,
+    category: CATEGORY_NAME_MAP[item.category] ?? fallbackCategory,
+    savedAt: item.savedAt,
+    transcript: item.transcript,
+  }));
+}
+
+let _favorites: MockVideo[] | null = null;
+let _categories: CategoryMeta[] | null = null;
 
 /**
- * 读取 public/mock/ 下所有 *_favorites.json 文件并合并为 MockVideo[]。
- * category 字段根据文件名前缀或原始 category 字段映射为 CategoryId。
+ * 加载所有收藏视频（从静态导入的 JSON 合并）。
  */
-function loadFavoritesFromParts(): MockVideo[] {
-  const mockDir = path.join(process.cwd(), "public", "mock");
-
-  // 文件名前缀 → CategoryId
-  const fileMap: Record<string, CategoryId> = {
-    tech: "tech",
-    food: "food",
-    jieshuo: "jieshuo",
-    trip: "trip",
-    chuanda: "renwen",
-    game: "game",
-    knowledge: "knowledge",
-  };
-
-  const all: MockVideo[] = [];
-
-  for (const [prefix, catId] of Object.entries(fileMap)) {
-    const filePath = path.join(mockDir, `${prefix}_favorites.json`);
-    if (!existsSync(filePath)) continue;
-
-    const raw = JSON.parse(
-      readFileSync(filePath, "utf-8")
-    ) as RawFavorite | RawFavorite[];
-
-    const items = Array.isArray(raw) ? raw : [raw];
-
-    for (const item of items) {
-      all.push({
-        id: item.id,
-        title: item.title,
-        description: item.description,
-        tags: item.tags,
-        category: CATEGORY_NAME_MAP[item.category] ?? catId,
-        savedAt: item.savedAt,
-        transcript: item.transcript,
-      });
-    }
+export function getFavorites(): MockVideo[] {
+  if (!_favorites) {
+    _favorites = [
+      ...mapRawToVideos(techFavorites as RawFavorite[], "tech"),
+      ...mapRawToVideos(foodFavorites as RawFavorite[], "food"),
+      ...mapRawToVideos(knowledgeFavorites as RawFavorite[], "knowledge"),
+      ...mapRawToVideos(jieshuo as RawFavorite[], "jieshuo"),
+      ...mapRawToVideos(lvyou as RawFavorite[], "trip"),
+      ...mapRawToVideos(youxi as RawFavorite[], "game"),
+      ...mapRawToVideos(knowledge as RawFavorite[], "knowledge"),
+    ];
   }
+  return _favorites;
+}
 
-  return all;
+export function getCategories(): CategoryMeta[] {
+  if (!_categories) _categories = categoriesData as CategoryMeta[];
+  return _categories;
 }
 
 // ─────────────────────────────────────────────
