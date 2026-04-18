@@ -12,7 +12,7 @@ const floatingIcons = [
   { id: 3, src: "/icon_food.png", rotate: -10, x: "10%", y: "65%", delay: "1.2s", duration: "5.5s", scale: 1.05 },
   // 右侧3个
   { id: 4, src: "/icon_trip.png", rotate: 8, x: "85%", y: "28%", delay: "0.4s", duration: "7s", scale: 0.98 },
-  { id: 5, src: "/icon_chuanda.png", rotate: -6, x: "88%", y: "48%", delay: "1.6s", duration: "6s", scale: 1.02 },
+  { id: 5, src: "/icon_renwen.png", rotate: -6, x: "88%", y: "48%", delay: "1.6s", duration: "6s", scale: 1.02 },
   { id: 6, src: "/icon_jieshuo.png", rotate: 5, x: "83%", y: "68%", delay: "0.6s", duration: "6.8s", scale: 0.92 },
 ];
 
@@ -24,7 +24,7 @@ const mobileFloatingIcons = [
   { id: 3, src: "/icon_food.png", rotate: -6, x: "78%", y: "10%", delay: "1s", duration: "5.5s", scale: 0.95 },
   // 下方3个
   { id: 4, src: "/icon_trip.png", rotate: 8, x: "12%", y: "82%", delay: "0.3s", duration: "6.5s", scale: 0.88 },
-  { id: 5, src: "/icon_chuanda.png", rotate: -10, x: "48%", y: "85%", delay: "0.8s", duration: "6s", scale: 0.9 },
+  { id: 5, src: "/icon_renwen.png", rotate: -10, x: "48%", y: "85%", delay: "0.8s", duration: "6s", scale: 0.9 },
   { id: 6, src: "/icon_jieshuo.png", rotate: 6, x: "80%", y: "80%", delay: "1.2s", duration: "5.8s", scale: 0.87 },
 ];
 
@@ -44,38 +44,6 @@ function FloatingIcon({ src, rotate, x, y, delay, duration, scale }: typeof floa
     </div>
   );
 }
-
-function Stars() {
-  const [stars] = useState(() =>
-    Array.from({ length: 20 }, (_, i) => ({
-      id: i,
-      size: 2 + (i % 3),
-      x: (i * 17 + 5) % 95,
-      y: (i * 23 + 3) % 90,
-      delay: (i * 0.4) % 3,
-    }))
-  );
-  return (
-    <>
-      {stars.map((s) => (
-        <div
-          key={s.id}
-          className="absolute rounded-full"
-          style={{
-            width: s.size,
-            height: s.size,
-            left: `${s.x}%`,
-            top: `${s.y}%`,
-            background: "rgba(255,255,255,0.5)",
-            animation: `blink ${2.5 + s.delay}s ease-in-out infinite`,
-            animationDelay: `${s.delay}s`,
-          }}
-        />
-      ))}
-    </>
-  );
-}
-
 
 function GroundWave() {
   return (
