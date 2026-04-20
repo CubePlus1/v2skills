@@ -92,11 +92,6 @@ export default function GeneratedSkillModal({
 
         <div className="overflow-y-auto px-5 py-5 md:px-6">
           <div className="flex flex-wrap gap-2">
-            {result.mockMode ? (
-              <span className="rounded-full bg-[#FFF3DF] px-3 py-1 text-xs text-[#A26A21]">
-                当前为 Mock 模式
-              </span>
-            ) : null}
             {result.truncated ? (
               <span className="rounded-full bg-[#EEF7FF] px-3 py-1 text-xs text-[#4A7A9A]">
                 字幕已按 10k 字截断

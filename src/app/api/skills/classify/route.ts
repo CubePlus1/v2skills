@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAIModel, hasAIKey } from "@/lib/ai-client";
-import { getCategories } from "@/lib/mock/data";
+import { getCategories } from "@/config/categories";
 import {
   categoryIds,
   videoClassificationSchema,

@@ -150,8 +150,8 @@ export default function LandingPage() {
 
             {/* CTA 按钮 */}
             <button
-              onClick={() => router.push("/loading")}
-              className="w-full py-3 rounded-full text-white font-bold text-sm mb-2"
+              onClick={() => router.push("/create")}
+              className="w-full py-3 rounded-full text-white font-bold text-sm mb-3"
               style={{
                 background: "#2C2C2C",
                 boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
@@ -166,35 +166,11 @@ export default function LandingPage() {
                 e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.15)";
               }}
             >
-              立即开始整理！
-            </button>
-
-            <button
-              onClick={() => router.push("/create")}
-              className="w-full py-3 rounded-full text-sm font-bold mb-3"
-              style={{
-                background: "rgba(255,255,255,0.92)",
-                color: "#2C2C2C",
-                border: "1px solid rgba(44,44,44,0.12)",
-                boxShadow: "0 4px 12px rgba(113,151,167,0.12)",
-                transition: "transform 0.2s, box-shadow 0.2s",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = "translateY(-2px)";
-                e.currentTarget.style.boxShadow =
-                  "0 6px 16px rgba(113,151,167,0.18)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "translateY(0)";
-                e.currentTarget.style.boxShadow =
-                  "0 4px 12px rgba(113,151,167,0.12)";
-              }}
-            >
               贴字幕生成 Skill
             </button>
 
             <p className="text-center text-xs text-gray-500">
-              ✨Demo模式，无需账号✨
+              ✨ 本地运行，开源免费 ✨
             </p>
           </div>
         </div>

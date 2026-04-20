@@ -5,12 +5,13 @@
  * 负责将视频内容提炼为符合 Claude Code 规范的 SKILL.md 文件
  */
 
-import { MockVideo, CategoryId, getCategories } from "@/lib/mock/data";
+import { type CategoryId, getCategories } from "@/config/categories";
 import {
-  Skill,
-  SkillMetadata,
-  SkillContent,
-  SkillExample,
+  type Skill,
+  type SkillMetadata,
+  type SkillContent,
+  type SkillExample,
+  type Video,
 } from "@/types/index";
 import { hasAIKey, getAIModel, buildSkillGenerationPrompt } from "@/lib/ai-client";
 
@@ -28,7 +29,7 @@ function getCategoryDisplayName(catId: CategoryId): string {
 // ─────────────────────────────────────────────
 
 export async function generateSkillWithAI(
-  videos: MockVideo[],
+  videos: Video[],
   category: CategoryId,
   customName?: string,
   customDescription?: string
@@ -129,7 +130,7 @@ export async function generateSkillWithAI(
 // ─────────────────────────────────────────────
 
 export function generateSkillFromTemplate(
-  videos: MockVideo[],
+  videos: Video[],
   category: CategoryId,
   customName?: string,
   customDescription?: string
@@ -223,7 +224,7 @@ export function generateSkillFromTemplate(
 
 export function generateSkillMarkdown(
   skill: Skill,
-  videos: MockVideo[]
+  videos: Video[]
 ): string {
   const catDisplayName = getCategoryDisplayName(skill.category);
 

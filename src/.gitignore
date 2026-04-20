@@ -17,13 +17,6 @@
 /.next/
 /out/
 
-# open-next
-/.open-next/
-
-# cloudflare wrangler
-/.wrangler/
-.dev.vars
-
 # production
 /build
 

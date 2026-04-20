@@ -1,6 +1,46 @@
-import { MockVideo, CategoryId } from "@/lib/mock/data";
+import type { CategoryId } from "@/config/categories";
 
-// Skill 相关类型定义
+// ─────────────────────────────────────────────
+// 视频数据结构
+// ─────────────────────────────────────────────
+
+/**
+ * Skill 生成管线的完整视频记录——包含 transcript 与元数据。
+ * 可以由用户直接填表（/create 手动模式）构造，
+ * 也可以由 Phase B 视频抽取子系统（yt-dlp 等）填充后得到。
+ */
+export interface Video {
+  id: string;
+  title: string;
+  description: string;
+  tags: string[];
+  category: CategoryId;
+  savedAt: string; // ISO 8601
+  transcript?: string;
+  author?: string;
+  thumbnail?: string;
+  url?: string;
+  duration?: number; // seconds
+  viewCount?: number;
+}
+
+/**
+ * 用户表单直接提供的视频数据。Video 的可写子集——
+ * id / category / savedAt 等字段由后端补齐。
+ */
+export interface VideoInput {
+  title: string;
+  transcript: string;
+  description?: string;
+  author?: string;
+  tags?: string[];
+  url?: string;
+  duration?: number;
+}
+
+// ─────────────────────────────────────────────
+// Skill 相关类型
+// ─────────────────────────────────────────────
 
 export interface SkillMetadata {
   name: string; // kebab-case 格式，如 "cooking-style-writing"
@@ -14,10 +54,10 @@ export interface SkillMetadata {
 export interface SkillContent {
   trigger: string; // 触发词，如 "教你写美食文案"
   instructions: string; // 核心指令
-  examples: SkillExample[]; // 使用示例
-  constraints: string[]; // 约束条件
-  capabilities: string[]; // 核心能力
-  useCases: string[]; // 使用场景
+  examples: SkillExample[];
+  constraints: string[];
+  capabilities: string[];
+  useCases: string[];
 }
 
 export interface SkillExample {
@@ -27,20 +67,13 @@ export interface SkillExample {
 
 export interface Skill extends SkillMetadata, SkillContent {}
 
-export interface VideoInput {
-  title: string;
-  transcript: string;
-  description?: string;
-  author?: string;
-  tags?: string[];
-  url?: string;
-  duration?: number;
-}
+// ─────────────────────────────────────────────
+// API 合同
+// ─────────────────────────────────────────────
 
 export interface GenerateSkillRequest {
   category: CategoryId;
-  videoIds?: string[];
-  videos?: VideoInput[];
+  videos: VideoInput[];
   skillName?: string;
   skillDescription?: string;
   mode?: "default" | "advanced";
@@ -53,7 +86,6 @@ export interface GenerateSkillResponse {
   skillContent?: string;
   skill?: Skill;
   usageExample?: string;
-  mockMode?: boolean;
   truncated?: boolean;
   error?: string;
 }
@@ -63,7 +95,5 @@ export interface SkillPreviewResponse {
   metadata: SkillMetadata;
 }
 
-// Re-export for convenience
-export type { MockVideo, CategoryId };
-/** @deprecated Use CategoryId instead */
-export type VideoCategory = CategoryId;
+// 便捷 re-export
+export type { CategoryId };
