@@ -6,12 +6,18 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { getFavorites } from "@/lib/mock/data";
+import { hasAIKey } from "@/lib/ai-client";
+import { getFavorites, MockVideo } from "@/lib/mock/data";
 import {
   generateSkillWithAI,
   generateSkillMarkdown,
   validateSkillName,
 } from "@/lib/skillTemplate";
+import {
+  categoryIdSchema,
+  inlineVideosSchema,
+  MAX_TRANSCRIPT_LENGTH,
+} from "@/lib/validators/videoInput";
 import {
   GenerateSkillRequest,
   GenerateSkillResponse,
@@ -22,18 +28,41 @@ export const runtime = "nodejs";
 export async function POST(req: NextRequest) {
   try {
     const body: GenerateSkillRequest = await req.json();
-    const { category, videoIds, skillName, skillDescription, mode } = body;
+    const {
+      category,
+      videoIds,
+      videos: inlineVideos,
+      skillName,
+      skillDescription,
+      mode,
+    } = body;
 
-    // 验证必填字段
-    if (!category || !videoIds || videoIds.length === 0) {
+    if (!category) {
       return NextResponse.json(
         {
           success: false,
-          error: "category 和 videoIds 是必填字段",
+          error: "category 是必填字段",
         } as GenerateSkillResponse,
         { status: 400 }
       );
     }
+
+    const parsedCategory = categoryIdSchema.safeParse(category);
+
+    if (!parsedCategory.success) {
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            parsedCategory.error.issues[0]?.message ??
+            "category 是必填字段",
+        } as GenerateSkillResponse,
+        { status: 400 }
+      );
+    }
+    const safeCategory = parsedCategory.data;
+
+    const mockMode = !hasAIKey();
 
     // 验证 Skill 名称格式（如果提供）
     if (skillName) {
@@ -47,6 +76,72 @@ export async function POST(req: NextRequest) {
           { status: 400 }
         );
       }
+    }
+
+    if (inlineVideos && inlineVideos.length > 0) {
+      const parsedVideos = inlineVideosSchema.safeParse(inlineVideos);
+
+      if (!parsedVideos.success) {
+        return NextResponse.json(
+          {
+            success: false,
+            error:
+              parsedVideos.error.issues[0]?.message ?? "视频输入校验失败",
+          } as GenerateSkillResponse,
+          { status: 422 }
+        );
+      }
+
+      let truncated = false;
+      const baseId = `user-input-${Date.now()}`;
+      const videos: MockVideo[] = parsedVideos.data.map((video, index) => {
+        const transcript = video.transcript.slice(0, MAX_TRANSCRIPT_LENGTH);
+        if (transcript.length < video.transcript.length) {
+          truncated = true;
+        }
+
+        return {
+          id: `${baseId}-${index}`,
+          title: video.title,
+          description: video.description ?? "",
+          tags: video.tags ?? [],
+          category: safeCategory,
+          savedAt: new Date().toISOString(),
+          transcript,
+          author: video.author,
+          url: video.url,
+          duration: video.duration,
+        };
+      });
+
+      const skill = await generateSkillWithAI(
+        videos,
+        safeCategory,
+        skillName,
+        skillDescription
+      );
+      const skillContent = generateSkillMarkdown(skill, videos);
+
+      return NextResponse.json({
+        success: true,
+        skillPath: `.claude/skills/${skill.name}/SKILL.md`,
+        skillName: skill.name,
+        skillContent,
+        skill,
+        usageExample: `/${skill.name}`,
+        mockMode,
+        truncated,
+      } as GenerateSkillResponse);
+    }
+
+    if (!videoIds || videoIds.length === 0) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "videoIds 和 videos 至少提供一种输入",
+        } as GenerateSkillResponse,
+        { status: 400 }
+      );
     }
 
     // 获取所有视频
@@ -69,7 +164,7 @@ export async function POST(req: NextRequest) {
 
     // 验证视频是否属于指定分类
     const categoryMismatch = selectedVideos.some(
-      (v) => v.category !== category
+      (v) => v.category !== safeCategory
     );
     if (categoryMismatch) {
       return NextResponse.json(
@@ -84,7 +179,7 @@ export async function POST(req: NextRequest) {
     // 生成 Skill
     const skill = await generateSkillWithAI(
       selectedVideos,
-      category,
+      safeCategory,
       skillName,
       skillDescription
     );
@@ -98,7 +193,10 @@ export async function POST(req: NextRequest) {
       skillPath: `.claude/skills/${skill.name}/SKILL.md`,
       skillName: skill.name,
       skillContent,
+      skill,
       usageExample: `/${skill.name}`,
+      mockMode,
+      truncated: false,
     } as GenerateSkillResponse);
   } catch (error) {
     console.error("[Skill Generate Error]", error);

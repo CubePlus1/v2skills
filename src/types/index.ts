@@ -27,9 +27,20 @@ export interface SkillExample {
 
 export interface Skill extends SkillMetadata, SkillContent {}
 
+export interface VideoInput {
+  title: string;
+  transcript: string;
+  description?: string;
+  author?: string;
+  tags?: string[];
+  url?: string;
+  duration?: number;
+}
+
 export interface GenerateSkillRequest {
   category: CategoryId;
-  videoIds: string[];
+  videoIds?: string[];
+  videos?: VideoInput[];
   skillName?: string;
   skillDescription?: string;
   mode?: "default" | "advanced";
@@ -40,7 +51,10 @@ export interface GenerateSkillResponse {
   skillPath?: string;
   skillName?: string;
   skillContent?: string;
+  skill?: Skill;
   usageExample?: string;
+  mockMode?: boolean;
+  truncated?: boolean;
   error?: string;
 }
 
