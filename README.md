@@ -1,90 +1,90 @@
-# FavToSkill - 收藏即技能(抖小夹)
+# FavToSkill
 
-> 别让你的收藏吃灰！一键将收藏内容凝练为Skill，让碎片化知识真正为你所用。
+> 粘贴视频链接，AI 解析成可执行的 Claude Code Skill。
 
-![alt text](docs/intro.png)
-## 产品介绍
+**FavToSkill** 是一个本地运行的 Web 应用，把视频内容（标题、简介、字幕）通过 LLM 提炼成符合 Claude Code 规范的 `SKILL.md` 文件，一键下载即刻可用。
 
-> 你是否也有这样的困扰——抖音收藏了上百条视频，微信公众号攒了一堆"稍后阅读"，小红书标记了无数好内容……但这些收藏大多再也没有打开过？
+---
 
-**FavToSkill** 就是为了解决这个问题而生。它能自动将你散落在各平台的收藏内容进行 AI 分类整理，构建你的个人知识图谱，并通过 RAG 问答深入理解内容，最终**一键生成Skill 文件**——让你积累的碎片知识变成真正可执行、可复用的 AI 技能。
+## 产品路线（两阶段）
 
-![alt text](docs/page1.png)
+### Phase A — 核心：Video → Skill（进行中）
+用户**手动提供视频信息**（标题 + 描述 + 字幕/文字稿 + 分类），直接生成 Skill。不依赖任何抓取能力，最小闭环。
 
-## 核心功能
+详见 [`docs/design/01-video-to-skill.md`](docs/design/01-video-to-skill.md)
 
-### 1. 智能分类 · 知识图谱
-- AI 自动将收藏内容分类为科技、美食、旅行、影视解说、人文知识、游戏等领域
-- 可视化知识地图，直观展示你的知识版图
-- 每个分类配备专属 Bot 角色，提供个性化引导
+### Phase B — 抓取：Bilibili API 接入（下一步）
+粘贴 Bilibili 视频链接，自动抽取元数据 + 字幕（基于 [`yt-dlp`](https://github.com/yt-dlp/yt-dlp) + Node 子进程）。抽象 `VideoExtractor` 接口，未来扩展 YouTube、抖音等平台。
 
-### 2. RAG 智能问答
-- 基于收藏内容的检索增强生成（RAG）对话
-- 支持中文分词的加权关键词检索（标题 5x / 标签 3x / 描述 2x / 字幕 1x）
-- 流式 AI 响应，实时输出，体验流畅
-- 内置 LLM 响应缓存，优化性能与成本
+详见 [`docs/design/02-video-extraction.md`](docs/design/02-video-extraction.md)
 
-### 3. Skill 一键生成
-- 从收藏内容中提炼知识，一键生成符合 Claude Code 规范的 `SKILL.md` 文件
-- 支持 AI 结构化生成（Zod Schema 约束）与模板兜底双模式
-- 生成的 Skill 包含：使用场景、核心能力、示例、约束条件、知识来源等完整结构
-- 一键导出下载，即刻在 Claude Code 中使用
+---
 
-![alt text](docs/page2.png)
+## 当前已实现能力
 
-## 技术实现
+- ✅ 7 分类视频浏览（科技 / 解说 / 美食 / 旅行 / 人文 / 游戏 / 知识），每个分类带专属 AI 助手形象
+- ✅ 基于关键词检索的流式问答（通义千问 qwen3.5-plus）
+- ✅ AI 结构化输出生成 `SKILL.md`（Zod schema 约束）
+- ✅ Demo 视频数据完整演示闭环
+- ❌ 视频 URL 抓取（Phase B）
+- ❌ 真正的向量 RAG（当前是加权关键词检索）
 
-| 层级 | 技术选型 | 说明 |
-|------|---------|------|
-| 框架 | **Next.js 16** (App Router) + **React 19** | 全栈框架，SSR + API Routes |
-| 语言 | **TypeScript 5** | 全量类型安全 |
-| 样式 | **Tailwind CSS v4** | 原子化 CSS + 自定义 CSS 变量设计体系 |
-| AI SDK | **Vercel AI SDK** + **LangChain.js** | streamText / generateObject 流式生成 |
-| LLM | **通义千问 qwen3.5-plus**（DashScope API） | OpenAI 兼容协议接入 |
-| 数据校验 | **Zod v4** | Skill 生成结构化输出约束 |
-| 向量数据库 | **ChromaDB**（规划中） | Phase 2 语义检索能力 |
-| 部署 | **Netlify** | 一键部署，Standalone 输出模式 |
+---
 
-**系统架构概览：**
+## 技术栈
 
-```
-用户收藏内容 → AI 智能分类 → 知识图谱展示
-                                    ↓
-                            RAG 检索增强问答
-                                    ↓
-                         Claude Code Skill 生成 → 导出使用
-```
+| 层级 | 选型 |
+|------|------|
+| 框架 | Next.js 16 (App Router) + React 19 |
+| 语言 | TypeScript 5 |
+| 样式 | Tailwind CSS v4 |
+| AI SDK | Vercel AI SDK (`streamText` / `generateObject`) |
+| LLM | 通义千问 qwen3.5-plus（DashScope OpenAI 兼容） |
+| 校验 | Zod v4 |
+| 视频抽取 | yt-dlp + `youtube-dl-exec`（Phase B） |
+| 运行 | 本地 Node.js 20+ |
 
-## 关于 Demo 数据
-
-> 本项目诞生于黑客松，由于时间紧张，加之抖音平台对收藏内容存在严格的反爬机制，当前版本使用 **Demo 模拟数据** 进行功能演示，旨在完整展示产品核心流程与交互体验。
-
-## 未来规划
-
-我们的愿景是打造一个 **跨平台收藏内容聚合管理 + AI 技能生成** 平台：
-
-- **多平台收藏导入**：接入抖音、微信公众号精选、小红书、Bilibili、知乎收藏等主流内容平台
-- **统一收藏管理**：一个入口管理你散落各处的收藏内容，告别信息孤岛
-- **Skill 市场**：用户生成的 Skill 可分享、可发现，构建社区知识生态
-- **个性化知识体系**：基于长期收藏行为，构建你独一无二的知识画像
-
-**将你在任何平台的收藏内容凝练提纯，一键生成你想要的Skill——这就是 FavToSkill 的终极目标。**
+---
 
 ## 快速开始
 
 ```bash
 cd src
-cp .env.example .env.local   # 配置环境变量（可选，无 API Key 自动使用 Mock 模式）
+cp .env.example .env.local   # 可选：配置 AI_API_KEY；留空自动走 mock 模式
 npm install
 npm run dev
 ```
 
-访问 [http://localhost:3000](http://localhost:3000) 体验完整功能。
+访问 <http://localhost:3000>。
 
-## Together
+### 环境变量
 
-这是一个充满想象力的开源项目，我们欢迎所有感兴趣的开发者一起参与共建！
+```bash
+AI_API_KEY=sk-...                                      # 可选
+AI_BASE_URL=https://coding.dashscope.aliyuncs.com/v1   # 默认 DashScope
+AI_MODEL=qwen3.5-plus                                  # 默认千问
+# Phase B（视频抓取）所需
+# BILIBILI_COOKIES=SESSDATA=xxx; bili_jct=xxx          # 可选：部分受限视频需要
+```
 
-无论你擅长前端交互、AI/RAG 管线、爬虫与数据采集、还是产品设计，都欢迎加入我们，一起让「收藏吃灰」成为历史。
+### Phase B 额外依赖
+Phase B 抓取能力需要本机安装：
+- Python 3.9+（yt-dlp 运行时）
+- `youtube-dl-exec` 会在 `npm install` 时自动拉取 yt-dlp 二进制
 
-欢迎通过 Issue 或 PR 参与贡献，期待与你一起打造下一代个人知识管理工具！
+---
+
+## 设计文档
+
+位于 [`docs/design/`](docs/design/)：
+
+- [`01-video-to-skill.md`](docs/design/01-video-to-skill.md) — Phase A：核心 Video → Skill 功能
+- [`02-video-extraction.md`](docs/design/02-video-extraction.md) — Phase B：视频抽取子系统
+- [`../ARCHITECTURE.md`](docs/ARCHITECTURE.md) — 整体架构（部分过时，以实际代码为准）
+- [`../SKILL_GENERATION_DESIGN.md`](docs/SKILL_GENERATION_DESIGN.md) — Skill 生成管线细节
+
+---
+
+## 贡献
+
+欢迎 Issue / PR。擅长前端交互、AI 管线、爬虫与数据采集、产品设计的朋友都可以参与。
