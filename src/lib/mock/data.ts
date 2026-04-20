@@ -1,8 +1,8 @@
 // ─────────────────────────────────────────────
-// 静态 JSON 导入（兼容 Cloudflare Workers，无需 fs）
+// Mock 视频数据加载器（遗留 Demo 流使用）
+// 分类体系已迁移到 src/config/categories.ts
 // ─────────────────────────────────────────────
 
-import categoriesData from "../../public/mock/categories.json";
 import techFavorites from "../../public/mock/tech_favorites.json";
 import foodFavorites from "../../public/mock/food_favorites.json";
 import knowledgeFavorites from "../../public/mock/knowledge_favorites.json";
@@ -10,22 +10,20 @@ import jieshuo from "../../public/mock/jieshuo.json";
 import lvyou from "../../public/mock/lvyou.json";
 import youxi from "../../public/mock/youxi.json";
 import knowledge from "../../public/mock/knowledge.json";
+import {
+  CATEGORY_NAME_MAP,
+  type CategoryId,
+  type CategoryMeta,
+  getCategories,
+  findCategoryId,
+} from "@/config/categories";
+
+// 兼容 re-export——迁移期内旧代码仍从本模块取类型/辅助函数
+export type { CategoryId, CategoryMeta };
+export { getCategories, findCategoryId };
 
 // ─────────────────────────────────────────────
-// 分类 ID — 与 categories.json 中的 id 对齐
-// ─────────────────────────────────────────────
-
-export type CategoryId =
-  | "tech"
-  | "jieshuo"
-  | "food"
-  | "trip"
-  | "renwen"
-  | "game"
-  | "knowledge";
-
-// ─────────────────────────────────────────────
-// 视频数据类型
+// 视频数据类型（mock-only，真实路径用 src/types/index.ts 里的 VideoInput）
 // ─────────────────────────────────────────────
 
 export interface MockVideo {
@@ -43,33 +41,6 @@ export interface MockVideo {
   duration?: number; // seconds
   viewCount?: number;
 }
-
-export interface CategoryMeta {
-  id: CategoryId;
-  name: string; // 展示名称，如"科技"、"美食"
-  description: string;
-  videoCount: number;
-  color: string;
-  colorDark?: string;
-  emoji?: string;
-  icon?: string;
-  topTags: string[];
-}
-
-// ─────────────────────────────────────────────
-// 中文分类名 → CategoryId
-// ─────────────────────────────────────────────
-
-const CATEGORY_NAME_MAP: Record<string, CategoryId> = {
-  科技: "tech",
-  美食: "food",
-  解说: "jieshuo",
-  旅行: "trip",
-  人文: "renwen",
-  游戏: "game",
-  知识: "knowledge",
-  商业财经: "knowledge",
-};
 
 // ─────────────────────────────────────────────
 // 数据加载（静态导入，构建时打包）
@@ -105,7 +76,6 @@ function mapRawToVideos(
 }
 
 let _favorites: MockVideo[] | null = null;
-let _categories: CategoryMeta[] | null = null;
 
 /**
  * 加载所有收藏视频（从静态导入的 JSON 合并）。
@@ -123,11 +93,6 @@ export function getFavorites(): MockVideo[] {
     ];
   }
   return _favorites;
-}
-
-export function getCategories(): CategoryMeta[] {
-  if (!_categories) _categories = categoriesData as CategoryMeta[];
-  return _categories;
 }
 
 // ─────────────────────────────────────────────
@@ -148,19 +113,6 @@ export function getFavoritesPage(
   const total = list.length;
   const data = list.slice((page - 1) * limit, page * limit);
   return { data, total, page, limit };
-}
-
-/**
- * 根据分类名称（中文）或 ID 查找 CategoryId。
- * 例如 "科技" → "tech"，"tech" → "tech"
- */
-export function findCategoryId(nameOrId: string): CategoryId | undefined {
-  if (nameOrId in CATEGORY_NAME_MAP) {
-    return CATEGORY_NAME_MAP[nameOrId];
-  }
-  const categories = getCategories();
-  const cat = categories.find((c) => c.id === nameOrId || c.name === nameOrId);
-  return cat?.id;
 }
 
 /**

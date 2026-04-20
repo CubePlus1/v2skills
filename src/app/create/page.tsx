@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import categoriesData from "../../public/mock/categories.json";
+import { CATEGORIES } from "@/config/categories";
 import CategoryPicker, {
   CategorySuggestion,
 } from "@/components/create/CategoryPicker";
@@ -29,7 +29,7 @@ type CreateCategory = {
   icon?: string;
 };
 
-const categories = categoriesData as CreateCategory[];
+const categories = CATEGORIES as readonly CreateCategory[];
 
 const initialVideoForm: VideoFormValue = {
   title: "",

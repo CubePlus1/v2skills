@@ -1,5 +1,5 @@
 import { z } from "zod";
-import categoriesData from "../../public/mock/categories.json";
+import { CATEGORIES } from "@/config/categories";
 import type { CategoryId } from "@/types/index";
 
 export const MIN_TRANSCRIPT_LENGTH = 200;
@@ -16,7 +16,7 @@ const EMPTY_TO_UNDEFINED = (value: unknown) => {
   return value;
 };
 
-export const categoryIds = categoriesData.map((category) => category.id) as [
+export const categoryIds = CATEGORIES.map((category) => category.id) as [
   CategoryId,
   ...CategoryId[],
 ];

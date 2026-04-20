@@ -19,7 +19,7 @@ export interface CategorySuggestion {
 }
 
 interface CategoryPickerProps {
-  categories: CategoryItem[];
+  categories: readonly CategoryItem[];
   value?: CategoryId;
   onChange: (value: CategoryId) => void;
   onSuggest: () => void;
