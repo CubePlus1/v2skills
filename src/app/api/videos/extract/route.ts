@@ -5,6 +5,27 @@ import {
   getExtractErrorStatus,
   toExtractError,
 } from "@/lib/extractor";
+import {
+  MAX_TITLE_LENGTH,
+  MAX_AUTHOR_LENGTH,
+  MAX_DESCRIPTION_LENGTH,
+  MAX_TAG_COUNT,
+  MAX_TAG_LENGTH,
+} from "@/lib/validators/videoInput";
+
+/** 把超限的抓取字段自动截断到表单可接受的范围，避免用户进到 /create 就挂校验 */
+function clampForForm(s: string | undefined, max: number): string | undefined {
+  if (!s) return s;
+  return s.length > max ? s.slice(0, max) : s;
+}
+function clampTags(tags: string[] | undefined): string[] {
+  if (!Array.isArray(tags)) return [];
+  return tags
+    .map((t) => t?.trim())
+    .filter((t): t is string => typeof t === "string" && t.length > 0)
+    .map((t) => (t.length > MAX_TAG_LENGTH ? t.slice(0, MAX_TAG_LENGTH) : t))
+    .slice(0, MAX_TAG_COUNT);
+}
 
 export const runtime = "nodejs";
 
@@ -61,11 +82,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       video: {
-        title: result.title,
-        author: result.author ?? "",
-        description: result.description ?? "",
+        title: clampForForm(result.title, MAX_TITLE_LENGTH) ?? result.title,
+        author: clampForForm(result.author, MAX_AUTHOR_LENGTH) ?? "",
+        description:
+          clampForForm(result.description, MAX_DESCRIPTION_LENGTH) ?? "",
         transcript: result.transcript,
-        tags: result.tags ?? [],
+        tags: clampTags(result.tags),
         duration: result.duration,
         platform: result.platform,
         url: result.url,

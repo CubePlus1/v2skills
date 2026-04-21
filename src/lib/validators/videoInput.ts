@@ -4,8 +4,14 @@ import type { CategoryId } from "@/types/index";
 
 export const MIN_TRANSCRIPT_LENGTH = 200;
 export const MAX_TRANSCRIPT_LENGTH = 10_000;
-export const MAX_TAG_COUNT = 10;
-export const MAX_TAG_LENGTH = 20;
+// 以下上限主要是防御恶意/意外巨大输入，不是内容策略——YouTube 抓取
+// 常有 2k+ 字 description、30+ tags、单 tag 30+ 字（搬运视频尤其明显）。
+// 后端对超限内容自动截断而不是报错（见 /api/skills/generate）。
+export const MAX_DESCRIPTION_LENGTH = 8_000;
+export const MAX_TITLE_LENGTH = 300;
+export const MAX_AUTHOR_LENGTH = 200;
+export const MAX_TAG_COUNT = 50;
+export const MAX_TAG_LENGTH = 80;
 
 const EMPTY_TO_UNDEFINED = (value: unknown) => {
   if (typeof value === "string") {
@@ -28,18 +34,24 @@ export const videoInputSchema = z.object({
     .string()
     .trim()
     .min(1, "请输入视频标题")
-    .max(100, "标题最多 100 个字"),
+    .max(MAX_TITLE_LENGTH, `标题最多 ${MAX_TITLE_LENGTH} 个字`),
   transcript: z
     .string()
     .trim()
     .min(MIN_TRANSCRIPT_LENGTH, `字幕/文字稿至少 ${MIN_TRANSCRIPT_LENGTH} 字`),
   description: z.preprocess(
     EMPTY_TO_UNDEFINED,
-    z.string().max(1000, "简介最多 1000 个字").optional()
+    z
+      .string()
+      .max(MAX_DESCRIPTION_LENGTH, `简介最多 ${MAX_DESCRIPTION_LENGTH} 个字`)
+      .optional()
   ),
   author: z.preprocess(
     EMPTY_TO_UNDEFINED,
-    z.string().max(80, "作者最多 80 个字").optional()
+    z
+      .string()
+      .max(MAX_AUTHOR_LENGTH, `作者最多 ${MAX_AUTHOR_LENGTH} 个字`)
+      .optional()
   ),
   tags: z
     .array(
