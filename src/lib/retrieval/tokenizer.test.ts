@@ -15,8 +15,8 @@ describe("tokenize", () => {
     expect(toks).toContain("注意");
     expect(toks).toContain("注意力");
     expect(toks).toContain("注意力机");
-    expect(toks).toContain("注意力机制");
     expect(toks).toContain("意力机制");
+    expect(toks).not.toContain("注意力机制");
   });
 
   it("filters chinese stopwords", () => {

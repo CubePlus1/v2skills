@@ -42,7 +42,7 @@ export function tokenize(text: string): string[] {
 
   const cnMatches = lower.match(CN_REGEX) ?? [];
   for (const run of cnMatches) {
-    for (const gram of ngrams(run, 2, run.length)) {
+    for (const gram of ngrams(run, 2, 4)) {
       // Skip if the n-gram itself is in stopwords
       if (CN_STOPWORDS.has(gram)) continue;
       // Skip if all characters in the n-gram are character-level stopwords
