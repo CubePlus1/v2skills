@@ -16,6 +16,7 @@ import VideoForm, {
   VideoFormErrors,
   VideoFormValue,
 } from "@/components/create/VideoForm";
+import { validateSkillName } from "@/lib/skillName";
 import {
   MIN_TRANSCRIPT_LENGTH,
   videoClassificationSchema,
@@ -249,7 +250,6 @@ export default function CreatePage() {
 
     const nextSkillName = skillName.trim();
     if (nextSkillName) {
-      const { validateSkillName } = await import("@/lib/skillTemplate");
       const validation = validateSkillName(nextSkillName);
       if (!validation.valid) {
         setSkillNameError(validation.error);

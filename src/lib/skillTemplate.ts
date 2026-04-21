@@ -12,6 +12,10 @@ import {
   type Video,
 } from "@/types/index";
 import { getAIModel, buildSkillGenerationPrompt } from "@/lib/ai-client";
+import { generateSkillName, validateSkillName } from "@/lib/skillName";
+
+// 重新导出，让既有调用方（API route）不必改 import 路径
+export { generateSkillName, validateSkillName };
 
 // ─────────────────────────────────────────────
 // 辅助：获取分类展示名
@@ -222,40 +226,6 @@ ${videoList}
 // 辅助函数
 // ─────────────────────────────────────────────
 
-export function generateSkillName(
-  category: CategoryId,
-  mainTag?: string
-): string {
-  const categorySlug = category
-    .toLowerCase()
-    .replace(/\s+/g, "-")
-    .replace(/[^a-z0-9\u4e00-\u9fa5-]/g, "");
-
-  const tagSlug = mainTag
-    ? mainTag
-        .toLowerCase()
-        .replace(/\s+/g, "-")
-        .replace(/[^a-z0-9\u4e00-\u9fa5-]/g, "")
-    : "";
-
-  const base = tagSlug ? `${categorySlug}-${tagSlug}` : categorySlug;
-  return `${base}-skill`;
-}
-
-export function validateSkillName(name: string): {
-  valid: boolean;
-  error?: string;
-} {
-  if (!name || name.trim().length === 0) {
-    return { valid: false, error: "Skill 名称不能为空" };
-  }
-
-  if (!/^[a-z0-9\u4e00-\u9fa5]+(-[a-z0-9\u4e00-\u9fa5]+)*$/.test(name)) {
-    return {
-      valid: false,
-      error: "Skill 名称必须使用 kebab-case 格式（小写字母、数字、中文，用连字符分隔）",
-    };
-  }
-
-  return { valid: true };
-}
+// generateSkillName / validateSkillName 已迁移到 src/lib/skillName.ts
+// （纯函数、无服务端依赖，client 和 server 都能直接 import）。
+// 本文件顶部 re-export 保持向后兼容。
