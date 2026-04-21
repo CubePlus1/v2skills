@@ -13,7 +13,7 @@ export default function ModeSwitch({ value, onChange }: ModeSwitchProps) {
       <div className="mb-4">
         <h2 className="text-lg font-semibold text-[#1A1A1A]">输入模式</h2>
         <p className="mt-1 text-sm text-[#5F6F7A]">
-          支持手动整理，也支持直接贴 Bilibili 链接自动抓取。
+          首选 YouTube 链接（字幕覆盖最全），也支持手动粘贴。
         </p>
       </div>
 
@@ -46,13 +46,13 @@ export default function ModeSwitch({ value, onChange }: ModeSwitchProps) {
               : "border-[#D4E4EC] bg-white text-[#1A1A1A] hover:border-[#B7CCD7]"
           }`}
         >
-          <div className="text-sm font-semibold">贴视频链接</div>
+          <div className="text-sm font-semibold">贴 YouTube 链接</div>
           <div
             className={`mt-1 text-xs ${
               value === "url" ? "text-white/80" : "text-[#6B7C86]"
             }`}
           >
-            自动抓取标题、简介、标签和字幕，再继续编辑。
+            推荐。YouTube 几乎都有字幕；Bilibili 也支持但覆盖有限。
           </div>
         </button>
       </div>

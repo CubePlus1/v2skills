@@ -46,7 +46,7 @@ export default function UrlExtractor({ onExtracted }: UrlExtractorProps) {
   const handleExtract = async () => {
     const trimmedUrl = url.trim();
     if (!trimmedUrl) {
-      setError("请先粘贴一个 Bilibili 或 YouTube 视频链接。");
+      setError("请先粘贴一个 YouTube 或 Bilibili 视频链接。");
       return;
     }
 
@@ -88,7 +88,8 @@ export default function UrlExtractor({ onExtracted }: UrlExtractorProps) {
       <div className="mb-5">
         <h2 className="text-lg font-semibold text-[#1A1A1A]">视频链接抓取</h2>
         <p className="mt-1 text-sm text-[#5F6F7A]">
-          当前支持 Bilibili 和 YouTube。系统会自动抓标题、简介、标签和字幕，不下载视频本体。
+          <strong className="text-[#1A1A1A]">推荐 YouTube</strong>——字幕覆盖率高，抓取稳定。
+          也支持 Bilibili，但大部分 B 站视频用的是"硬字幕"（烧进画面），无法抓取。
         </p>
       </div>
 
@@ -109,7 +110,7 @@ export default function UrlExtractor({ onExtracted }: UrlExtractorProps) {
             }
           }}
           className={inputClassName}
-          placeholder="https://www.bilibili.com/video/BVxxx 或 https://www.youtube.com/watch?v=xxx"
+          placeholder="https://www.youtube.com/watch?v=xxx （或 Bilibili BV 链接）"
           autoComplete="off"
         />
         <button
@@ -123,8 +124,9 @@ export default function UrlExtractor({ onExtracted }: UrlExtractorProps) {
       </div>
 
       <div className="mt-3 text-xs leading-6 text-[#738792]">
-        常见耗时 5 到 30 秒。受限内容可在 .env.local 配置
-        `BILIBILI_COOKIES` 或 `YOUTUBE_COOKIES`。
+        常见耗时 5 到 30 秒。国内访问 YouTube 需要在 .env.local 配
+        <code className="mx-1 rounded bg-white px-1">YOUTUBE_PROXY</code>
+        指向本机代理（如 <code className="rounded bg-white px-1">http://127.0.0.1:7897</code>）。
       </div>
 
       {error ? (

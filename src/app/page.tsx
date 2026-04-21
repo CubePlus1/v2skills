@@ -120,7 +120,7 @@ export default function LandingPage() {
                 FavToSkill
               </h1>
               <p className="text-xs leading-relaxed text-gray-600">
-                粘贴视频链接，AI 解析成 Claude Code Skill
+                粘贴 YouTube 链接，AI 提炼成 Claude Code Skill
               </p>
             </div>
 
