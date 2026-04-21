@@ -70,7 +70,8 @@
 |---|---|
 | ✅ **Phase A**：`/create` 页面 + 文本模式 + 分类 + 生成 + 下载 | 已实现，稳定 |
 | ✅ **Phase B**：URL 模式 + yt-dlp 抽取 Bilibili + YouTube | 已实现 |
-| 🟡 **Phase C**：用户意图 + 切片 + 关键词 RAG（见下文） | **规划完成，待实施** |
+| ✅ **Phase C**：用户意图 + 切片 + 关键词 RAG（意图扩展 + BM25 + top-K） | **已实施**（与批量共享 `src/lib/retrieval/`） |
+| ✅ **批量导入**：`/batch` 多视频 → 跨视频 RAG → 单 Skill | 已实施 |
 | ⏳ **Phase D**：Whisper ASR 兜底无字幕视频 | 未规划 |
 
 设计文档：[`docs/design/`](docs/design/)
@@ -121,19 +122,31 @@ npm run dev
 
 ## 使用流程
 
-1. 打开 `/` → 点「贴字幕生成 Skill」
-2. 在 `/create` 选模式：
-   - **贴 YouTube 链接**（推荐）——自动抓表单
-   - **手动填写**——直接粘 transcript
+### 单视频（`/create`）
+
+1. 打开 `/` → 点「单视频 → Skill」
+2. 选模式：**贴 YouTube 链接**（推荐，自动抓表单）或 **手动填写**
 3. 按需编辑表单字段（title / author / description / transcript / tags）
 4. 点「AI 帮我选」让模型推荐分类，或手动从 7 个领域选一个
 5. 给 Skill 起 kebab-case 名字（会自动按标题生成建议）
 6. 点「生成 Skill」→ 预览 → 下载 `SKILL.md`
 7. 放到 `~/.claude/skills/<skill-name>/SKILL.md`，Claude Code 启动自动加载
 
+### 批量多视频（`/batch`）
+
+1. 打开 `/` → 点「批量 → 跨视频凝练」
+2. 粘 1–10 个视频链接（可混 YouTube + Bilibili），点「抓取所有视频」
+3. 等待串行抓取结束（单个失败不阻塞其他）
+4. 填写**学习意图**（强烈推荐）——例：「搞懂 attention 的具体计算步骤」
+5. 选分类 + Skill 名 → 点「生成 Skill」
+6. 系统自动：意图关键词扩展 → 跨视频切片 BM25 检索 top-8 片段 → LLM 凝练 → 输出一份 `SKILL.md`（每条 instructions 标注来源视频）
+7. 下载并安装到 `~/.claude/skills/`
+
+批量场景 AI 自动分类暂不支持（单视频场景才有），请手动选。
+
 ---
 
-## 规划中：Phase C · 意图驱动的切片 RAG
+## 意图驱动的切片 RAG（Phase C · 已实施）
 
 **问题**：当前生成管线把整段 transcript 直接塞 prompt。长视频（>10k 字）被硬截断，后半段完全丢；且模型不知道用户真正想学什么，生成的 Skill 往往是"视频主题的平均描述"。
 
