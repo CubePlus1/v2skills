@@ -11,7 +11,12 @@ import {
   type SkillMetadata,
   type Video,
 } from "@/types/index";
-import { getAIModel, buildSkillGenerationPrompt } from "@/lib/ai-client";
+import {
+  getAIModel,
+  buildSkillGenerationPrompt,
+  buildSkillGenerationPromptFromChunks,
+  type RetrievalContext,
+} from "@/lib/ai-client";
 import { generateSkillName, validateSkillName } from "@/lib/skillName";
 
 // 重新导出，让既有调用方（API route）不必改 import 路径
@@ -30,12 +35,32 @@ function getCategoryDisplayName(catId: CategoryId): string {
 // AI Skill 生成（使用 OpenAI）
 // ─────────────────────────────────────────────
 
+export interface GenerateSkillOptions {
+  videos: Video[];
+  category: CategoryId;
+  customName?: string;
+  customDescription?: string;
+  retrievalContext?: RetrievalContext;
+}
+
 export async function generateSkillWithAI(
-  videos: Video[],
-  category: CategoryId,
-  customName?: string,
-  customDescription?: string
+  optsOrVideos: GenerateSkillOptions | Video[],
+  legacyCategory?: CategoryId,
+  legacyName?: string,
+  legacyDescription?: string
 ): Promise<Skill> {
+  // Backward-compat: preserve positional-arg signature for existing callers
+  const opts: GenerateSkillOptions = Array.isArray(optsOrVideos)
+    ? {
+        videos: optsOrVideos,
+        category: legacyCategory as CategoryId,
+        customName: legacyName,
+        customDescription: legacyDescription,
+      }
+    : optsOrVideos;
+
+  const { videos, category, customName, customDescription, retrievalContext } = opts;
+
   const { generateObject } = await import("ai");
   const { z } = await import("zod");
   const model = await getAIModel();
@@ -103,11 +128,20 @@ export async function generateSkillWithAI(
       .describe("3-5 条使用场景列表；每条具体到用户行为"),
   });
 
-  const prompt = buildSkillGenerationPrompt(
-    catDisplayName,
-    videos.length,
-    videoSummaries
-  );
+  const prompt =
+    retrievalContext && retrievalContext.chunks.length > 0
+      ? buildSkillGenerationPromptFromChunks(
+          {
+            displayTitle: videos.map((v) => v.title).join(" + "),
+            author: videos[0]?.author,
+            description: videos.map((v) => v.description).filter(Boolean).join(" / ").slice(0, 1000),
+            tags: Array.from(new Set(videos.flatMap((v) => v.tags))).slice(0, 15),
+            category: catDisplayName,
+            skillName: customName ?? generateSkillName(category, videos[0]?.tags[0]),
+          },
+          retrievalContext
+        )
+      : buildSkillGenerationPrompt(catDisplayName, videos.length, videoSummaries);
 
   // 重试机制：用 mode: "json" 让小模型走 JSON 模式而不是 tool-calling
   // （gpt-5.4-mini 级别的模型对 function/tool-calling 支持较差）。
